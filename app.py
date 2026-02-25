@@ -27,3 +27,64 @@ def create_user():
 
     return jsonify(user.to_dict()), 201
 
+
+# -----------------------------
+# GET ALL USERS
+# -----------------------------
+@app.route("/users", methods=["GET"])
+def get_users():
+    users = User.query.all()
+    return jsonify([user.to_dict() for user in users])
+
+
+# -----------------------------
+# ADD WORKOUT
+# -----------------------------
+@app.route("/workouts", methods=["POST"])
+def add_workout():
+    data = request.get_json()
+
+    user = User.query.get(data["user_id"])
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    workout = Workout(
+        workout_type=data["workout_type"],
+        duration_minutes=data["duration_minutes"],
+        user=user
+    )
+
+    db.session.add(workout)
+    db.session.commit()
+
+    return jsonify(workout.to_dict()), 201
+
+
+# -----------------------------
+# GET ALL WORKOUTS
+# -----------------------------
+@app.route("/workouts", methods=["GET"])
+def get_workouts():
+    workouts = Workout.query.all()
+    return jsonify([workout.to_dict() for workout in workouts])
+
+
+# -----------------------------
+# UPDATE WORKOUT
+# -----------------------------
+@app.route("/workouts/<int:workout_id>", methods=["PUT"])
+def update_workout(workout_id):
+    workout = Workout.query.get(workout_id)
+
+    if not workout:
+        return jsonify({"error": "Workout not found"}), 404
+
+    data = request.get_json()
+
+    workout.workout_type = data.get("workout_type", workout.workout_type)
+    workout.duration_minutes = data.get("duration_minutes", workout.duration_minutes)
+
+    db.session.commit()
+
+    return jsonify(workout.to_dict())
+
